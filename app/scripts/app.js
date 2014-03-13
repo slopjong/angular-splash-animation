@@ -1,3 +1,3 @@
 'use strict';
 
-angular.module('splashAnimationApp', []);
+angular.module('splashAnimationApp', ['sj.splash']);
