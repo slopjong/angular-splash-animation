@@ -9,7 +9,7 @@
 
 <div class="jumbotron">
     <splash-animation words="[['Well done','broke'],['Good job','ruined']]">
-        Hooray! <span class="sa-word">Well done</span>.
-        You totally <span class="sa-word">broke</span> it.
+        Hooray! <div word ng-bind="currentWords[0]">Well done</div>.
+        You totally <div word ng-bind="currentWords[1]">broke</div> it.
     </splash-animation>
 </div>
