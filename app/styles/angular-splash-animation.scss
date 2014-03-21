@@ -2,6 +2,7 @@
 
 .sa-container {
 
+  position: relative;
   padding-top: 60px;
   height: 200px;
 
@@ -16,5 +17,10 @@
   .sa-word,
   .sa-placeholder {
     @include opacity(0);
+  }
+
+  .sa-splash {
+    position: absolute;
+    top: 0;
   }
 }
