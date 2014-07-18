@@ -29,6 +29,15 @@ angular
       },
       nextWords: function(wordset, currentIndex) {
         return wordset[this.nextWordsIndex(wordset, currentIndex)];
+      },
+      serialize: function(obj) {
+        var serialized = '{';
+        for(var key in obj) {
+          serialized += key + ':' + obj[key] + ',';
+        }
+        serialized = serialized.slice(0, - 1);
+        serialized += '}';
+        return serialized;
       }
     }
   })
