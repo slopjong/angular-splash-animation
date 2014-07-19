@@ -5,6 +5,7 @@
   position: relative;
   padding-top: 60px;
   height: 200px;
+  overflow: hidden;
 
   .sa-word {
     @include box-sizing(border-box);
@@ -21,6 +22,20 @@
 
   .sa-splash {
     position: absolute;
-    top: 0;
+    top: -100px;
+    left: 0;
+
+    white-space: nowrap;
+    display: inline-block;
+
+    &.sa-movein {
+      top: 60px;
+      @include transition-duration(2s);
+    }
+
+    &.sa-moveout {
+      top: 200px;
+      @include transition-duration(2s);
+    }
   }
 }
