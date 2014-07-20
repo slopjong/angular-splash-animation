@@ -17,6 +17,16 @@ angular
       nextWords: function(wordset, currentIndex) {
         return wordset[this.nextWordsIndex(wordset, currentIndex)];
       },
+      previousWordsIndex: function(wordset, currentIndex) {
+        var previousIndex = currentIndex - 1;
+        if ( previousIndex < 0) {
+          previousIndex = wordset.length - 1;
+        }
+        return previousIndex;
+      },
+      previousWords: function(wordset, currentIndex) {
+        return wordset[this.previousWordsIndex(wordset, currentIndex)];
+      },
       serialize: function(obj) {
         var serialized = '{';
         for(var key in obj) {
