@@ -78,6 +78,17 @@ angular
         // data binding and will update automatically
         $scope.currentWordsIndex = utils.nextWordsIndex($scope.words, $scope.currentWordsIndex);
         $scope.currentWords = utils.nextWords($scope.words, $scope.currentWordsIndex);
+
+        angular.forEach($scope.wordDomItemsPlaceholder, function(placeholderWord, index) {
+          // we must use a timeout of 0s so that we change the width
+          // on digest cycles, or in other words, we must wait until
+          // angular has updated the view, we'd take the width with the
+          // old view's content otherwise.
+          $timeout(function(){
+            $scope.wordDomItems[index].width(placeholderWord.width());
+          }, 0);
+        });
+
         $timeout($scope.animate, $scope.changeInterval);
       };
 
