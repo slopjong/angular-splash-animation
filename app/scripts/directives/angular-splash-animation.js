@@ -104,15 +104,7 @@ angular
             var placeholder = $scope.wordDomItemsPlaceholder[word_index];
             var placeholderBoundingClientRect = placeholder[0].getBoundingClientRect();
 
-            // we must use a timeout of 0s so that we change the width
-            // on digest cycles, or in other words, we must wait until
-            // angular has updated the view, we'd take the width with the
-            // old view's content otherwise.
-            // @todo do we need the timeout here? it was needed in a former experiment
-            //       with another context but right in this place?
-            $timeout(function(){
-              placeholder.text(word);
-            }, 0);
+            placeholder.text(word);
 
             var boundingClientRect = {
               left: placeholderBoundingClientRect.left - containerBoundingClientRect.left,
@@ -135,6 +127,11 @@ angular
           $scope.splashItems.push(splashes);
         });
       };
+
+      // reset the initial placeholder values
+      angular.forEach($scope.currentWords, function(word, word_index){
+        $scope.wordDomItemsPlaceholder[word_index].text(word);
+      });
 
       // create the initial old/new splash items
       $scope.startAnimation = function startAnimation() {
