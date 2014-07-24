@@ -28,10 +28,12 @@ angular
         return wordset[this.previousWordsIndex(wordset, currentIndex)];
       },
       serialize: function(obj) {
+        // serialized won't be a JSON!
         var serialized = '{';
         for(var key in obj) {
           serialized += key + ':' + obj[key] + ',';
         }
+        // remove the trailing comma
         serialized = serialized.slice(0, - 1);
         serialized += '}';
         return serialized;
@@ -86,6 +88,11 @@ angular
           // old view's content otherwise.
           $timeout(function(){
             $scope.wordDomItems[index].width(placeholderWord.width());
+            $scope.splashItems[$scope.currentWordsIndex][index].removeClass('sa-moveout');
+            $scope.splashItems[$scope.currentWordsIndex][index].addClass('sa-movein');
+            $scope.splashItems[utils.previousWordsIndex($scope.currentWords, $scope.currentWordsIndex)][index].removeClass('sa-movein');
+            $scope.splashItems[utils.previousWordsIndex($scope.currentWords, $scope.currentWordsIndex)][index].addClass('sa-moveout');
+//            $scope.splashItems[utils.nextWordsIndex($scope.currentWords, $scope.currentWordsIndex)][index].removeClass('sa-moveout');
           }, 0);
         });
 
