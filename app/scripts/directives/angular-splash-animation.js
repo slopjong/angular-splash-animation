@@ -3,7 +3,7 @@
 angular
   .module('sj.splash', [])
   .value('splashAnimationConfig', {
-    changeInterval: 3e3
+    changeInterval: 4e3
   })
   .factory('utils', function() {
     return {
@@ -81,22 +81,25 @@ angular
         $scope.currentWordsIndex = utils.nextWordsIndex($scope.words, $scope.currentWordsIndex);
         $scope.currentWords = utils.nextWords($scope.words, $scope.currentWordsIndex);
 
-        angular.forEach($scope.wordDomItemsPlaceholder, function(placeholderWord, index) {
-          // we must use a timeout of 0s so that we change the width
-          // on digest cycles, or in other words, we must wait until
-          // angular has updated the view, we'd take the width with the
-          // old view's content otherwise.
-          $timeout(function(){
-            $scope.wordDomItems[index].width(placeholderWord.width());
-            $scope.splashItems[$scope.currentWordsIndex][index].removeClass('sa-moveout');
-            $scope.splashItems[$scope.currentWordsIndex][index].addClass('sa-movein');
-            $scope.splashItems[utils.previousWordsIndex($scope.currentWords, $scope.currentWordsIndex)][index].removeClass('sa-movein');
-            $scope.splashItems[utils.previousWordsIndex($scope.currentWords, $scope.currentWordsIndex)][index].addClass('sa-moveout');
-//            $scope.splashItems[utils.nextWordsIndex($scope.currentWords, $scope.currentWordsIndex)][index].removeClass('sa-moveout');
-          }, 0);
-        });
+        $scope.$apply(function(){
+          angular.forEach($scope.wordDomItemsPlaceholder, function(placeholderWord, index) {
+            // we must use a timeout of 0s so that we change the width
+            // on digest cycles, or in other words, we must wait until
+            // angular has updated the view, we'd take the width with the
+            // old view's content otherwise.
+//            $timeout(function(){
+              $scope.wordDomItems[index].width(placeholderWord.width());
+              $scope.splashItems[$scope.currentWordsIndex][index].removeClass('sa-moveout');
+              $scope.splashItems[$scope.currentWordsIndex][index].addClass('sa-movein');
+              $scope.splashItems[utils.previousWordsIndex($scope.words, $scope.currentWordsIndex)][index].removeClass('sa-init');
+              $scope.splashItems[utils.previousWordsIndex($scope.words, $scope.currentWordsIndex)][index].removeClass('sa-movein');
+              $scope.splashItems[utils.previousWordsIndex($scope.words, $scope.currentWordsIndex)][index].addClass('sa-moveout');
+              $scope.splashItems[utils.nextWordsIndex($scope.words, $scope.currentWordsIndex)][index].removeClass('sa-moveout');
 
-        $timeout($scope.animate, $scope.changeInterval);
+//            }, 0);
+          });
+          $timeout($scope.animate, $scope.changeInterval);
+        });
       };
 
       $scope.createSplashItems = function() {
@@ -135,6 +138,12 @@ angular
         });
       };
 
+      $scope.initSplashItems = function() {
+        angular.forEach($scope.splashItems[0], function(splash) {
+          splash.addClass('sa-init');
+        });
+      };
+
       // reset the initial placeholder values
       angular.forEach($scope.currentWords, function(word, word_index){
         $scope.wordDomItemsPlaceholder[word_index].text(word);
@@ -143,6 +152,7 @@ angular
       // create the initial old/new splash items
       $scope.startAnimation = function startAnimation() {
         $scope.createSplashItems();
+        $scope.initSplashItems();
 
         // wait before starting the animation, otherwise we will skip
         // more or less the first iteration

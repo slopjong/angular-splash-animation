@@ -9,7 +9,7 @@
 
   .sa-word {
     @include box-sizing(border-box);
-    @include transition-duration(2s);
+    @include transition-duration(1s);
 
     white-space: nowrap;
     display: inline-block;
@@ -28,6 +28,10 @@
     white-space: nowrap;
     display: inline-block;
 
+    &.sa-init {
+      top: 60px;
+    }
+
     &.sa-movein {
       top: 60px;
       @include transition-duration(2s);
@@ -36,6 +40,8 @@
     &.sa-moveout {
       top: 200px;
       @include transition-duration(2s);
+      @include rotate(10deg);
+      @include opacity(0);
     }
   }
 }
