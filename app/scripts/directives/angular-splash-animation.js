@@ -5,28 +5,35 @@ angular
   .value('splashAnimationConfig', {
     changeInterval: 4e3
   })
-  .factory('utils', function() {
+  .factory('wordset', function() {
     return {
-      nextWordsIndex: function(wordset, currentIndex) {
-        var nextIndex = currentIndex + 1;
-        if ( nextIndex === wordset.length) {
+      // this is an array of arrays containing all the word sets
+      words: [],
+      currentIndex: 0,
+      nextIndex: function() {
+        var nextIndex = this.currentIndex + 1;
+        if ( nextIndex === this.words.length) {
           nextIndex = 0;
         }
         return nextIndex;
       },
-      nextWords: function(wordset, currentIndex) {
-        return wordset[this.nextWordsIndex(wordset, currentIndex)];
+      nextWords: function() {
+        return this.words[this.nextIndex()];
       },
-      previousWordsIndex: function(wordset, currentIndex) {
-        var previousIndex = currentIndex - 1;
+      previousIndex: function() {
+        var previousIndex = this.currentIndex - 1;
         if ( previousIndex < 0) {
-          previousIndex = wordset.length - 1;
+          previousIndex = this.words.length - 1;
         }
         return previousIndex;
       },
-      previousWords: function(wordset, currentIndex) {
-        return wordset[this.previousWordsIndex(wordset, currentIndex)];
-      },
+      previousWords: function() {
+        return this.words[this.previousIndex()];
+      }
+    }
+  })
+  .factory('utils', function() {
+    return {
       serialize: function(obj) {
         // serialized won't be a JSON!
         var serialized = '{';
@@ -41,8 +48,8 @@ angular
     }
   })
   .controller('SplashAnimationController', [
-    'splashAnimationConfig', '$scope', '$timeout', '$compile', 'utils',
-    function(splashAnimationConfig, $scope, $timeout, $compile, utils) {
+    'splashAnimationConfig', '$scope', '$timeout', '$compile', 'utils', 'wordset',
+    function(splashAnimationConfig, $scope, $timeout, $compile, utils, wordset) {
 
       // By defining a controller via module().controller() every directive
       // using this controller as their controller will lead to a new instance
@@ -57,54 +64,33 @@ angular
         return;
       }
 
-      $scope.changeInterval = splashAnimationConfig.changeInterval;
-
-      // this is an array of arrays containing all the word sets
-      $scope.words = [];
-
-      // keeps track of the current displayed words
-      $scope.currentWordsIndex = 0;
-      $scope.currentWords = [];
-      $scope.nextWordsIndex = 1;
-      $scope.nextWords = [];
-
       $scope.wordItems = [];
-
       $scope.wordDomItems = [];
       $scope.wordDomItemsPlaceholder = [];
-
       $scope.splashItems = [];
 
       $scope.animate = function animate() {
         // set the new current words, the word items in the view use
         // data binding and will update automatically
-        $scope.currentWordsIndex = utils.nextWordsIndex($scope.words, $scope.currentWordsIndex);
-        $scope.currentWords = utils.nextWords($scope.words, $scope.currentWordsIndex);
+        wordset.currentIndex = wordset.nextIndex();
 
-        $scope.$apply(function(){
-          angular.forEach($scope.wordDomItemsPlaceholder, function(placeholderWord, index) {
-            // we must use a timeout of 0s so that we change the width
-            // on digest cycles, or in other words, we must wait until
-            // angular has updated the view, we'd take the width with the
-            // old view's content otherwise.
-//            $timeout(function(){
-              $scope.wordDomItems[index].width(placeholderWord.width());
-              $scope.splashItems[$scope.currentWordsIndex][index].removeClass('sa-moveout');
-              $scope.splashItems[$scope.currentWordsIndex][index].addClass('sa-movein');
-              $scope.splashItems[utils.previousWordsIndex($scope.words, $scope.currentWordsIndex)][index].removeClass('sa-init');
-              $scope.splashItems[utils.previousWordsIndex($scope.words, $scope.currentWordsIndex)][index].removeClass('sa-movein');
-              $scope.splashItems[utils.previousWordsIndex($scope.words, $scope.currentWordsIndex)][index].addClass('sa-moveout');
-              $scope.splashItems[utils.nextWordsIndex($scope.words, $scope.currentWordsIndex)][index].removeClass('sa-moveout');
+        angular.forEach($scope.wordDomItemsPlaceholder, function(placeholderWord, index) {
+          placeholderWord.text(wordset.words[wordset.currentIndex][index]);
+          $scope.wordDomItems[index].width(placeholderWord.width());
 
-//            }, 0);
-          });
-          $timeout($scope.animate, $scope.changeInterval);
+          $scope.splashItems[wordset.currentIndex][index].removeClass('sa-moveout');
+          $scope.splashItems[wordset.currentIndex][index].addClass('sa-movein');
+          $scope.splashItems[wordset.previousIndex()][index].removeClass('sa-init');
+          $scope.splashItems[wordset.previousIndex()][index].removeClass('sa-movein');
+          $scope.splashItems[wordset.previousIndex()][index].addClass('sa-moveout');
+          $scope.splashItems[wordset.nextIndex()][index].removeClass('sa-moveout');
         });
+        $timeout($scope.animate, splashAnimationConfig.changeInterval);
       };
 
       $scope.createSplashItems = function() {
 
-        angular.forEach($scope.words, function(words, wordset_index) {
+        angular.forEach(wordset.words, function(words, wordset_index) {
 
           var splashes = [];
 
@@ -123,18 +109,23 @@ angular
               height: placeholderBoundingClientRect.height
             };
 
-            var template = '<splash wordset="0"' +
+            var template = '<splash ' +
               'bounding-client-rect="'+ utils.serialize(boundingClientRect) +'"' +
               '>'+ word +'</splash>';
 
             // create the splash, add it to the DOM and the splash collection
             var splash = $compile(template)($scope);
             splashes.push(splash);
-            $('.sa-container').append(splash);
 
+            $('.sa-container').append(splash);
           });
 
           $scope.splashItems.push(splashes);
+        });
+
+        // reset the initial placeholder values
+        angular.forEach($scope.currentWords, function(word, word_index){
+          $scope.wordDomItemsPlaceholder[word_index].text(word);
         });
       };
 
@@ -144,21 +135,23 @@ angular
         });
       };
 
-      // reset the initial placeholder values
-      angular.forEach($scope.currentWords, function(word, word_index){
-        $scope.wordDomItemsPlaceholder[word_index].text(word);
-      });
+      $scope.initWordWidth = function() {
+        angular.forEach($scope.wordDomItemsPlaceholder, function(placeholderWord, index) {
+          $scope.wordDomItems[index].width(placeholderWord.width());
+        });
+      };
 
       // create the initial old/new splash items
       $scope.startAnimation = function startAnimation() {
         $scope.createSplashItems();
         $scope.initSplashItems();
+        $scope.initWordWidth();
 
         // wait before starting the animation, otherwise we will skip
         // more or less the first iteration
         $timeout(function(){
           $scope.animate();
-        }, $scope.changeInterval);
+        }, splashAnimationConfig.changeInterval);
       };
     }])
   .directive("splash", [function(){
@@ -189,32 +182,47 @@ angular
         // to get the width of the placeholder words and to set the
         // word item widths explicitly in order to use the css transition
         if(element.parent().hasClass('sa-placeholder')) {
-          scope.wordDomItemsPlaceholder.push($(element));
+          if (angular.isDefined(attrs.order)) {
+            var order = parseInt(attrs.order);
+            scope.wordDomItemsPlaceholder[order] = $(element);
+          } else {
+            // @todo output a warning
+          }
         } else {
-          scope.wordDomItems.push($(element));
+          if (angular.isDefined(attrs.order)) {
+            var order = parseInt(attrs.order);
+            scope.wordDomItems[order] = $(element);
+          } else {
+            // @todo output a warning
+          }
         }
       }
     }
   }])
-  .directive("splashAnimation", ['splashAnimationConfig', '$timeout', function(splashAnimationConfig, $timeout) {
-    return {
-      restrict: 'E',
-      template: '<div class="sa-container"><div ng-transclude></div><div class="sa-placeholder" ng-transclude></div></div>',
-      replace: true,
-      transclude: true,
-      controller: 'SplashAnimationController',
-      link: function(scope, element, attrs) {
-        // parse the words (= string) into a nested javascript array
-        if (angular.isDefined(attrs.words)) {
-          scope.words = scope.$eval(attrs.words);
-          scope.currentWords = scope.words[0];
+  .directive("splashAnimation", [
+    'splashAnimationConfig', '$timeout', 'wordset',
+    function(splashAnimationConfig, $timeout, wordset) {
+      return {
+        restrict: 'E',
+        template:
+          '<div class="sa-container">' +
+          '  <div class="sa-slogan" ng-transclude></div>' +
+          '  <div class="sa-placeholder" ng-transclude></div>' +
+          '</div>',
+        replace: true,
+        transclude: true,
+        controller: 'SplashAnimationController',
+        link: function(scope, element, attrs) {
+          if (angular.isDefined(attrs.words)) {
+            wordset.words = scope.$eval(attrs.words);
+          }
+          if (angular.isDefined(attrs.interval)) {
+            splashAnimationConfig.changeInterval = scope.$eval(attrs.interval);
+          }
+          scope.startAnimation();
         }
-        if (angular.isDefined(attrs.interval)) {
-          scope.changeInterval = scope.$eval(attrs.interval);
-        }
-        scope.startAnimation();
-      }
-    };
-  }])
+      };
+    }
+  ])
 
   ;
