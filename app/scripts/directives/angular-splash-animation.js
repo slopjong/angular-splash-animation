@@ -47,9 +47,49 @@ angular
       }
     }
   })
+  .factory('splashes', [
+    '$rootScope', '$compile', 'utils', 'wordset',
+    function($rootScope, $compile, utils, wordset) {
+      return {
+        collection: [],
+        create: function(wordsetIndex, word, boundingClientRect) {
+          var template = '<splash ' +
+            'bounding-client-rect="'+ utils.serialize(boundingClientRect) +'"' +
+            '>'+ word +'</splash>';
+          var splash = $compile(template)($rootScope.$new());
+
+          if (! angular.isArray(this.collection[wordsetIndex])) {
+            this.collection[wordsetIndex] = [];
+          }
+
+          this.collection[wordsetIndex].push(splash);
+          return splash;
+        },
+        animateNext: function() {
+          angular.forEach(this.collection[wordset.currentIndex], function(splash) {
+            splash.removeClass('sa-moveout');
+            splash.addClass('sa-movein');
+          });
+          angular.forEach(this.collection[wordset.previousIndex()], function(splash) {
+            splash.removeClass('sa-init');
+            splash.removeClass('sa-movein');
+            splash.addClass('sa-moveout');
+          });
+          angular.forEach(this.collection[wordset.nextIndex()], function(splash) {
+            splash.removeClass('sa-moveout');
+          });
+        },
+        init: function(wordsetIndex) {
+          angular.forEach(this.collection[wordsetIndex], function(splash) {
+            splash.addClass('sa-init');
+          });
+        }
+      }
+    }
+  ])
   .controller('SplashAnimationController', [
-    'splashAnimationConfig', '$scope', '$timeout', '$compile', 'utils', 'wordset',
-    function(splashAnimationConfig, $scope, $timeout, $compile, utils, wordset) {
+    'splashAnimationConfig', '$scope', '$timeout', '$compile', 'utils', 'wordset', 'splashes',
+    function(splashAnimationConfig, $scope, $timeout, $compile, utils, wordset, splashes) {
 
       // By defining a controller via module().controller() every directive
       // using this controller as their controller will lead to a new instance
@@ -67,9 +107,11 @@ angular
       $scope.wordItems = [];
       $scope.wordDomItems = [];
       $scope.wordDomItemsPlaceholder = [];
-      $scope.splashItems = [];
 
       $scope.animate = function animate() {
+
+        splashes.animateNext();
+
         // set the new current words, the word items in the view use
         // data binding and will update automatically
         wordset.currentIndex = wordset.nextIndex();
@@ -77,23 +119,13 @@ angular
         angular.forEach($scope.wordDomItemsPlaceholder, function(placeholderWord, index) {
           placeholderWord.text(wordset.words[wordset.currentIndex][index]);
           $scope.wordDomItems[index].width(placeholderWord.width());
-
-          $scope.splashItems[wordset.currentIndex][index].removeClass('sa-moveout');
-          $scope.splashItems[wordset.currentIndex][index].addClass('sa-movein');
-          $scope.splashItems[wordset.previousIndex()][index].removeClass('sa-init');
-          $scope.splashItems[wordset.previousIndex()][index].removeClass('sa-movein');
-          $scope.splashItems[wordset.previousIndex()][index].addClass('sa-moveout');
-          $scope.splashItems[wordset.nextIndex()][index].removeClass('sa-moveout');
         });
+
         $timeout($scope.animate, splashAnimationConfig.changeInterval);
       };
 
       $scope.createSplashItems = function() {
-
         angular.forEach(wordset.words, function(words, wordset_index) {
-
-          var splashes = [];
-
           angular.forEach(words, function(word, word_index){
 
             var containerBoundingClientRect = $('.sa-container')[0].getBoundingClientRect();
@@ -109,30 +141,19 @@ angular
               height: placeholderBoundingClientRect.height
             };
 
-            var template = '<splash ' +
-              'bounding-client-rect="'+ utils.serialize(boundingClientRect) +'"' +
-              '>'+ word +'</splash>';
-
-            // create the splash, add it to the DOM and the splash collection
-            var splash = $compile(template)($scope);
-            splashes.push(splash);
-
+            // create the splash and append it to the splash animation container
+            var splash = splashes.create(wordset_index, word, boundingClientRect);
             $('.sa-container').append(splash);
           });
-
-          $scope.splashItems.push(splashes);
         });
 
         // reset the initial placeholder values
         angular.forEach($scope.currentWords, function(word, word_index){
           $scope.wordDomItemsPlaceholder[word_index].text(word);
         });
-      };
 
-      $scope.initSplashItems = function() {
-        angular.forEach($scope.splashItems[0], function(splash) {
-          splash.addClass('sa-init');
-        });
+        // position the first splashes
+        splashes.init(0);
       };
 
       $scope.initWordWidth = function() {
@@ -144,7 +165,6 @@ angular
       // create the initial old/new splash items
       $scope.startAnimation = function startAnimation() {
         $scope.createSplashItems();
-        $scope.initSplashItems();
         $scope.initWordWidth();
 
         // wait before starting the animation, otherwise we will skip
@@ -157,7 +177,7 @@ angular
   .directive("splash", [function(){
     return {
       restrict: 'E',
-      controller: ['$scope', function($scope){
+      controller: ['$scope', function($scope) {
         $scope.boundingClientRect = {}
       }],
       template: '<div class="sa-splash" ng-style="boundingClientRect" ng-transclude></div>',
