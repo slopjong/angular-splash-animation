@@ -10,6 +10,9 @@ angular
       // this is an array of arrays containing all the word sets
       words: [],
       currentIndex: 0,
+      forward: function() {
+        this.currentIndex = this.nextIndex();
+      },
       nextIndex: function() {
         var nextIndex = this.currentIndex + 1;
         if ( nextIndex === this.words.length) {
@@ -65,7 +68,7 @@ angular
           this.collection[wordsetIndex].push(splash);
           return splash;
         },
-        animateNext: function() {
+        animate: function() {
           angular.forEach(this.collection[wordset.currentIndex], function(splash) {
             splash.removeClass('sa-moveout');
             splash.addClass('sa-movein');
@@ -110,11 +113,8 @@ angular
 
       $scope.animate = function animate() {
 
-        splashes.animateNext();
-
-        // set the new current words, the word items in the view use
-        // data binding and will update automatically
-        wordset.currentIndex = wordset.nextIndex();
+        wordset.forward();
+        splashes.animate();
 
         angular.forEach($scope.wordDomItemsPlaceholder, function(placeholderWord, index) {
           placeholderWord.text(wordset.words[wordset.currentIndex][index]);
