@@ -126,17 +126,22 @@ angular
 
       $scope.createSplashItems = function() {
         angular.forEach(wordset.words, function(words, wordset_index) {
-          angular.forEach(words, function(word, word_index){
 
+          // replace all the placeholder words
+          angular.forEach(words, function(word, word_index){
+            $scope.wordDomItemsPlaceholder[word_index].text(word);
+          });
+
+          // now calculate all the placeholder positions and create the
+          // splashes accordingly
+          angular.forEach(words, function(word, word_index){
             var containerBoundingClientRect = $('.sa-container')[0].getBoundingClientRect();
             var placeholder = $scope.wordDomItemsPlaceholder[word_index];
             var placeholderBoundingClientRect = placeholder[0].getBoundingClientRect();
 
-            placeholder.text(word);
-
             var boundingClientRect = {
-              left: placeholderBoundingClientRect.left - containerBoundingClientRect.left,
-              right: containerBoundingClientRect.right - placeholderBoundingClientRect.right,
+              left: placeholder.position().left,
+              right: placeholder.position().right,
               width: placeholderBoundingClientRect.width,
               height: placeholderBoundingClientRect.height
             };
@@ -148,7 +153,7 @@ angular
         });
 
         // reset the initial placeholder values
-        angular.forEach($scope.currentWords, function(word, word_index){
+        angular.forEach(wordset.words[0], function(word, word_index){
           $scope.wordDomItemsPlaceholder[word_index].text(word);
         });
 
