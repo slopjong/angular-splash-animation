@@ -69,6 +69,10 @@ angular
           return splash;
         },
         animate: function() {
+          // this doesn't work properly if there's only one or two splash
+          // items because the current word index would also be the
+          // previous/next index and thus the classes wouldn't be set
+          // correctly
           angular.forEach(this.collection[wordset.currentIndex], function(splash) {
             splash.removeClass('sa-moveout');
             splash.addClass('sa-movein');
@@ -240,6 +244,18 @@ angular
         link: function(scope, element, attrs) {
           if (angular.isDefined(attrs.words)) {
             wordset.words = scope.$eval(attrs.words);
+
+            // We need at least three splash items for a proper animation
+            // since we don't create new splash elements on every cycle
+            // but reuse existing ones and remove/add css classes accordingly.
+            // See the comment in splashes.animate() .
+            if (wordset.words.length === 1) {
+              wordset.words[1] = wordset.words[0];
+              wordset.words[2] = wordset.words[0];
+            } else if (wordset.words.length === 2) {
+              wordset.words[2] = wordset.words[0];
+              wordset.words[3] = wordset.words[1];
+            }
           }
           if (angular.isDefined(attrs.interval)) {
             splashAnimationConfig.changeInterval = scope.$eval(attrs.interval);
