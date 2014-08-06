@@ -22,7 +22,8 @@ module.exports = function (grunt) {
     yeoman: {
       // configurable paths
       app: require('./bower.json').appPath || 'app',
-      dist: 'dist'
+      dist: 'dist',
+      lib: 'lib'
     },
 
     // Watches files for changes and runs tasks based on the changed files
@@ -118,6 +119,16 @@ module.exports = function (grunt) {
             '.tmp',
             '<%= yeoman.dist %>/*',
             '!<%= yeoman.dist %>/.git*'
+          ]
+        }]
+      },
+      lib: {
+        files: [{
+          dot: true,
+          src: [
+            '.tmp',
+            '<%= yeoman.lib %>/*',
+            '!<%= yeoman.lib %>/.git*'
           ]
         }]
       },
@@ -269,6 +280,25 @@ module.exports = function (grunt) {
 
     // Copies remaining files to places other tasks can use
     copy: {
+      lib: {
+        files: [{
+          expand: true,
+          dot: true,
+          cwd: '<%= yeoman.dist %>/scripts',
+          dest: '<%= yeoman.lib %>',
+          src: [
+            'angular-splash-animation.js'
+          ]
+        },{
+          expand: true,
+          dot: true,
+          cwd: '<%= yeoman.dist %>/styles',
+          dest: '<%= yeoman.lib %>',
+          src: [
+            'angular-splash-animation.css'
+          ]
+        }]
+      },
       dist: {
         files: [{
           expand: true,
@@ -399,6 +429,21 @@ module.exports = function (grunt) {
     'uglify',
     'rev',
     'usemin'
+  ]);
+
+  grunt.registerTask('build-lib', [
+    'clean:dist',
+    'clean:lib',
+    'bower-install',
+    'useminPrepare',
+    'concurrent:dist',
+    'concat',
+    'ngmin',
+    'copy:dist',
+    'cssmin',
+    'uglify',
+    'usemin',
+    'copy:lib'
   ]);
 
   grunt.registerTask('default', [
